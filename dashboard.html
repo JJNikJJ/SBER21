@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balance BioHealth - Главный экран</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="dashboard-page">
+<div class="container">
+    <header class="fixed-top d-flex justify-content-between align-items-center p-3 bg-light">
+        <input type="text" class="form-control mr-2" placeholder="Поиск...">
+        <div>
+            <span class="mr-3">🔔</span>
+            <span class="menu-icon" onclick="toggleMenu()">☰</span>
+        </div>
+    </header>
+    <nav class="fixed-sub-nav w-100 p-2">
+        <div class="container d-flex justify-content-around">
+            <button class="btn btn-link">Подсказки</button>
+            <button class="btn btn-link">Обучение</button>
+            <button class="btn btn-link">Все сервисы</button>
+        </div>
+    </nav>
+    <div class="content mt-2 pt-2">
+        <section class="reminders mt-5 pt-3">
+            <h2 class="mb-4">Напоминания</h2>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Напоминание о приеме лекарств</h5>
+                    <p class="card-text">Лекарство А - 8:00, Лекарство Б - 14:00</p>
+                </div>
+            </div>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">План диеты и напоминания о питании</h5>
+                    <p class="card-text">Завтрак - 7:00, Обед - 13:00, Ужин - 19:00</p>
+                </div>
+            </div>
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h5 class="card-title">Напоминания о необходимости выполнения физических упражнений</h5>
+                    <p class="card-text">Утром - бег, Вечером - йога</p>
+                </div>
+            </div>
+        </section>
+        <section class="statistics mt-5 pt-3">
+            <h2 class="mb-4">Статистика</h2>
+            <ul class="list-group mb-4">
+                <li class="list-group-item">Индекс массы тела (ИМТ): 22.5</li>
+                <li class="list-group-item">Статус физической активности: 10,000 шагов, 500 ккал</li>
+                <li class="list-group-item">Пульс и сердечный ритм: 70 уд/мин</li>
+                <li class="list-group-item">Сон: 8 часов/ночь</li>
+                <li class="list-group-item">Калории: 2,000 ккал/день</li>
+                <li class="list-group-item">Гидратация: 2 литра/день</li>
+            </ul>
+            <p>Данные за последние 7 дней:</p>
+            <canvas id="cholesterolChart" class="mb-4"></canvas>
+            <canvas id="bloodPressureChart" class="mb-4"></canvas>
+            <canvas id="activityChart" class="mb-4"></canvas>
+            <canvas id="nutritionChart" class="mb-4"></canvas>
+        </section>
+    </div>
+</div>
+
+<nav id="burger-menu" class="burger-menu position-fixed p-3">
+    <span class="close-icon" onclick="toggleMenu()">✖</span>
+    <ul class="list-unstyled">
+        <li><a href="dashboard.html">Главная</a></li>
+        <li><a href="diary.html">Дневник</a></li>
+        <li><a href="recommendations.html">Рекомендации</a></li>
+        <li><a href="consultations.html">Консультации</a></li>
+        <li><a href="support.html">Помощь и поддержка</a></li>
+        <li><a href="settings.html">Настройки</a></li>
+    </ul>
+</nav>
+
+<script>
+    function toggleMenu() {
+        var menu = document.getElementById('burger-menu');
+        menu.classList.toggle('open');
+    }
+
+    document.addEventListener("DOMContentLoaded", function() {
+        var ctx1 = document.getElementById('cholesterolChart').getContext('2d');
+        var ctx2 = document.getElementById('bloodPressureChart').getContext('2d');
+        var ctx3 = document.getElementById('activityChart').getContext('2d');
+        var ctx4 = document.getElementById('nutritionChart').getContext('2d');
+
+        var cholesterolChart = new Chart(ctx1, {
+            type: 'bar',
+            data: {
+                labels: ['ЛПНП', 'ЛПВП'],
+                datasets: [{
+                    label: 'Уровень холестерина (ммоль/л)',
+                    data: [3.5, 1.2],
+                    backgroundColor: ['#ff6384', '#36a2eb']
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        var bloodPressureChart = new Chart(ctx2, {
+            type: 'line',
+            data: {
+                labels: ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'],
+                datasets: [{
+                    label: 'Артериальное давление (мм рт. ст.)',
+                    data: [120, 125, 130, 115, 120, 110, 120],
+                    borderColor: '#ff6384',
+                    fill: false
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: false
+                    }
+                }
+            }
+        });
+
+        var activityChart = new Chart(ctx3, {
+            type: 'bar',
+            data: {
+                labels: ['Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Воскресенье'],
+                datasets: [{
+                    label: 'Физическая активность (шаги)',
+                    data: [8000, 10000, 7500, 9000, 10000, 11000, 9500],
+                    backgroundColor: '#4bc0c0'
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        var nutritionChart = new Chart(ctx4, {
+            type: 'pie',
+            data: {
+                labels: ['Белки', 'Жиры', 'Углеводы'],
+                datasets: [{
+                    label: 'Соотношение нутриентов (%)',
+                    data: [25, 30, 45],
+                    backgroundColor: ['#ff6384', '#36a2eb', '#ffcd56']
+                }]
+            },
+            options: {
+                responsive: true
+            }
+        });
+    });
+</script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

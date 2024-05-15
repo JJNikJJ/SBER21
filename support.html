@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Помощь и поддержка</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body class="support-page">
+<div class="container">
+    <header class="fixed-top d-flex justify-content-between align-items-center p-3 bg-light">
+        <input type="text" class="form-control mr-2" placeholder="Поиск...">
+        <div>
+            <span class="mr-3">🔔</span>
+            <span class="menu-icon" onclick="toggleMenu()">☰</span>
+        </div>
+    </header>
+    <nav class="fixed-sub-nav w-100 p-2">
+        <div class="container d-flex justify-content-around">
+            <button class="btn btn-link">Подсказки</button>
+            <button class="btn btn-link">Обучение</button>
+            <button class="btn btn-link">Все сервисы</button>
+        </div>
+    </nav>
+    <div class="content mt-2 pt-2">
+        <section class="support mt-5 pt-3">
+            <h2 class="mb-4">Помощь и поддержка</h2>
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-action">
+                    <h5 class="mb-1">Горячие номера телефонов больниц города</h5>
+                    <p class="mb-1">Список телефонов горячих линий для экстренных ситуаций и консультаций.</p>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <h5 class="mb-1">Телефон доверия</h5>
+                    <p class="mb-1">Контактный номер для психологической поддержки и консультаций.</p>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <h5 class="mb-1">Отправить заявку</h5>
+                    <p class="mb-1">Отправьте заявку в случае возникновения проблем с приложением.</p>
+                </a>
+            </div>
+        </section>
+    </div>
+</div>
+
+<nav id="burger-menu" class="burger-menu position-fixed bg-light p-3">
+    <span class="close-icon" onclick="toggleMenu()">✖</span>
+    <ul class="list-unstyled">
+        <li><a href="dashboard.html">Главная</a></li>
+        <li><a href="diary.html">Дневник</a></li>
+        <li><a href="recommendations.html">Рекомендации</a></li>
+        <li><a href="consultations.html">Консультации</a></li>
+        <li><a href="support.html">Помощь и поддержка</a></li>
+        <li><a href="settings.html">Настройки</a></li>
+    </ul>
+</nav>
+
+<script>
+    function toggleMenu() {
+        var menu = document.getElementById('burger-menu');
+        menu.classList.toggle('open');
+    }
+</script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

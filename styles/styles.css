@@ -1,0 +1,115 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding-top: 110px; /* Для фиксации верхнего меню */
+    background-color: #f8f9fa; /* Легкий серый фон */
+}
+
+.fixed-top {
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Тень для верхнего меню */
+}
+
+.menu-icon {
+    cursor: pointer;
+    font-size: 1.5em;
+}
+
+.burger-menu {
+    top: 0;
+    left: 0;
+    width: 250px;
+    height: 100%;
+    z-index: 1050;
+    transition: transform 0.3s ease-in-out;
+    transform: translateX(-100%);
+    background-color: #fff;
+}
+
+.burger-menu.open {
+    transform: translateX(0);
+}
+
+.burger-menu .close-icon {
+    font-size: 1.5em;
+    cursor: pointer;
+    display: block;
+    text-align: right;
+}
+
+.burger-menu ul {
+    padding: 0;
+    margin: 20px 0 0 0;
+}
+
+.burger-menu ul li {
+    list-style: none;
+    margin: 10px 0;
+}
+
+.burger-menu ul li a {
+    text-decoration: none;
+    color: #007bff;
+    padding: 10px;
+    display: block;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
+}
+
+.burger-menu ul li a:hover {
+    background-color: #e9ecef;
+}
+
+.fixed-sub-nav {
+    top: 56px; /* Высота верхнего меню */
+    z-index: 1040;
+    background-color: #fff;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1); /* Тень для поднавигации */
+}
+
+.list-group-item {
+    border: none;
+    border-radius: 5px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.list-group-item h5 {
+    font-weight: bold;
+}
+
+.list-group-item-action:hover {
+    background-color: #f8f9fa;
+    text-decoration: none;
+}
+
+.content {
+    margin-top: 20px;
+}
+
+.icons span {
+    font-size: 1.5em;
+    cursor: pointer;
+    margin-right: 10px;
+}
+
+/* Добавляем медиазапросы для мобильных устройств */
+@media (max-width: 768px) {
+    .fixed-top, .fixed-sub-nav {
+        padding-left: 15px;
+        padding-right: 15px;
+    }
+
+    .fixed-sub-nav .btn-link {
+        padding: 10px 5px;
+        font-size: 0.9rem;
+    }
+
+    .card-body h5 {
+        font-size: 1.25rem;
+    }
+
+    .card-body .btn-block {
+        font-size: 0.9rem;
+        padding: 10px 5px;
+    }
+}

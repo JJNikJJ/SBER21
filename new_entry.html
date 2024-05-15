@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Создание новой записи</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body class="new-entry-page">
+<div class="container">
+    <header class="fixed-top d-flex justify-content-between align-items-center p-3 bg-light">
+        <input type="text" class="form-control mr-2" placeholder="Поиск...">
+        <div>
+            <span class="mr-3">🔔</span>
+            <span class="menu-icon" onclick="toggleMenu()">☰</span>
+        </div>
+    </header>
+    <nav class="fixed-sub-nav w-100 p-2">
+        <div class="container d-flex justify-content-around">
+            <button class="btn btn-link">Подсказки</button>
+            <button class="btn btn-link">Обучение</button>
+            <button class="btn btn-link">Все сервисы</button>
+        </div>
+    </nav>
+    <div class="content mt-5 pt-5">
+        <section class="new-entry mt-5 pt-3">
+            <h2 class="mb-4">Создание новой записи</h2>
+            <form>
+                <div class="form-group">
+                    <label for="entryTitle">Название записи</label>
+                    <input type="text" class="form-control" id="entryTitle" placeholder="Введите название записи">
+                </div>
+                <div class="form-group">
+                    <label for="entryDate">Дата</label>
+                    <input type="date" class="form-control" id="entryDate">
+                </div>
+                <div class="form-group">
+                    <label for="entryDescription">Описание</label>
+                    <textarea class="form-control" id="entryDescription" rows="5" placeholder="Введите описание"></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Сохранить запись</button>
+            </form>
+        </section>
+    </div>
+</div>
+
+<nav id="burger-menu" class="burger-menu position-fixed p-3">
+    <span class="close-icon" onclick="toggleMenu()">✖</span>
+    <ul class="list-unstyled">
+        <li><a href="dashboard.html">Главная</a></li>
+        <li><a href="diary.html">Дневник</a></li>
+        <li><a href="recommendations.html">Рекомендации</a></li>
+        <li><a href="consultations.html">Консультации</a></li>
+        <li><a href="support.html">Помощь и поддержка</a></li>
+        <li><a href="settings.html">Настройки</a></li>
+    </ul>
+</nav>
+
+<script>
+    function toggleMenu() {
+        var menu = document.getElementById('burger-menu');
+        menu.classList.toggle('open');
+    }
+</script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

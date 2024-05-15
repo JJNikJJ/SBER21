@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Дневник - Показатели здоровья</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body class="diary-page">
+<div class="container">
+    <header class="fixed-top d-flex justify-content-between align-items-center p-3 bg-light">
+        <input type="text" class="form-control mr-2" placeholder="Поиск...">
+        <div>
+            <span class="mr-3">🔔</span>
+            <span class="menu-icon" onclick="toggleMenu()">☰</span>
+        </div>
+    </header>
+    <nav class="fixed-sub-nav w-100 p-2">
+        <div class="container d-flex justify-content-around">
+            <button class="btn btn-link">Подсказки</button>
+            <button class="btn btn-link">Обучение</button>
+            <button class="btn btn-link">Все сервисы</button>
+        </div>
+    </nav>
+    <div class="content mt-2 pt-2">
+        <button class="btn btn-primary btn-block mt-3" onclick="location.href='new_entry.html'">Сделать новую запись</button>
+        <section class="previous-entries mt-5 pt-3">
+            <h2 class="mb-4">Предыдущие записи</h2>
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">Общие самочувствие</h5>
+                        <small>12.05.2024</small>
+                    </div>
+                    <p class="mb-1">Описание вашего общего самочувствия за этот день.</p>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">Анализы крови</h5>
+                        <small>10.05.2024</small>
+                    </div>
+                    <p class="mb-1">Результаты последних анализов крови.</p>
+                </a>
+                <a href="#" class="list-group-item list-group-item-action">
+                    <div class="d-flex w-100 justify-content-between">
+                        <h5 class="mb-1">Физическая активность</h5>
+                        <small>08.05.2024</small>
+                    </div>
+                    <p class="mb-1">Отчет о вашей физической активности.</p>
+                </a>
+            </div>
+        </section>
+    </div>
+</div>
+
+<nav id="burger-menu" class="burger-menu position-fixed p-3">
+    <span class="close-icon" onclick="toggleMenu()">✖</span>
+    <ul class="list-unstyled">
+        <li><a href="dashboard.html">Главная</a></li>
+        <li><a href="diary.html">Дневник</a></li>
+        <li><a href="recommendations.html">Рекомендации</a></li>
+        <li><a href="consultations.html">Консультации</a></li>
+        <li><a href="support.html">Помощь и поддержка</a></li>
+        <li><a href="settings.html">Настройки</a></li>
+    </ul>
+</nav>
+
+<script>
+    function toggleMenu() {
+        var menu = document.getElementById('burger-menu');
+        menu.classList.toggle('open');
+    }
+</script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

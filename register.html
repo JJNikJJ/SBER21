@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balance BioHealth - Регистрация</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body class="register-page">
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="text-center">
+                <img src="assets/logo.png" alt="Logo" class="logo mb-4">
+                <h2 class="mb-4">Регистрация</h2>
+            </div>
+            <form id="registerForm">
+                <div class="form-group">
+                    <input type="email" class="form-control" id="email" placeholder="BioBalance@example.com" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" class="form-control" id="password" placeholder="Пароль" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" class="form-control" id="confirmPassword" placeholder="Подтвердите пароль" required>
+                </div>
+                <button class="btn btn-primary btn-block" type="submit">Зарегистрироваться</button>
+            </form>
+            <p class="text-center text-muted mt-3">Уже есть аккаунт? <a href="login.html">Войти</a></p>
+        </div>
+    </div>
+</div>
+
+<!-- Firebase App (the core Firebase SDK) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<!-- Firebase Authentication -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+
+<script>
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyB-_oI_jI-DDSL0QNTImYNH8vf7tg5onSs",
+        authDomain: "sber21.firebaseapp.com",
+        projectId: "sber21",
+        storageBucket: "sber21.appspot.com",
+        messagingSenderId: "993524622050",
+        appId: "1:993524622050:web:6a8279bb42f5b23907f4bb",
+        measurementId: "G-3Y71LV32FZ"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+
+    document.getElementById('registerForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+
+        if (password !== confirmPassword) {
+            alert("Пароли не совпадают");
+            return;
+        }
+
+        firebase.auth().createUserWithEmailAndPassword(email, password)
+            .then((userCredential) => {
+                // Registered successfully
+                var user = userCredential.user;
+                alert("Регистрация прошла успешно!");
+                window.location.href = "dashboard.html"; // Перенаправить на главную страницу после успешной регистрации
+            })
+            .catch((error) => {
+                var errorCode = error.code;
+                var errorMessage = error.message;
+                alert("Ошибка регистрации: " + errorMessage);
+            });
+    });
+</script>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>
