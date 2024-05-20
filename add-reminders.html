@@ -23,6 +23,10 @@
                             <input type="text" class="form-control" name="medicationName" required>
                         </div>
                         <div class="form-group">
+                            <label for="dosage">Дозировка</label>
+                            <input type="text" class="form-control" name="dosage" required>
+                        </div>
+                        <div class="form-group">
                             <label for="timesPerDay">Количество приемов в день</label>
                             <input type="number" class="form-control times-per-day" name="timesPerDay" min="1" required>
                         </div>
@@ -81,6 +85,10 @@
                 <input type="text" class="form-control" name="medicationName" required>
             </div>
             <div class="form-group">
+                <label for="dosage">Дозировка</label>
+                <input type="text" class="form-control" name="dosage" required>
+            </div>
+            <div class="form-group">
                 <label for="timesPerDay">Количество приемов в день</label>
                 <input type="number" class="form-control times-per-day" name="timesPerDay" min="1" required>
             </div>
@@ -123,11 +131,12 @@
             const reminderEntries = document.querySelectorAll('.reminder-entry');
             const reminders = Array.from(reminderEntries).map(entry => {
                 const medicationName = entry.querySelector('[name="medicationName"]').value;
+                const dosage = entry.querySelector('[name="dosage"]').value;
                 const timesPerDay = entry.querySelector('[name="timesPerDay"]').value;
                 const timeInputs = entry.querySelectorAll('.time-input');
                 const times = Array.from(timeInputs).map(input => input.value);
                 const beforeAfterMeal = entry.querySelector('[name="beforeAfterMeal"]').value;
-                return { medicationName, timesPerDay, times, beforeAfterMeal };
+                return { medicationName, dosage, timesPerDay, times, beforeAfterMeal };
             });
 
             db.collection('users').doc(user.uid).update({ reminders })
