@@ -45,6 +45,7 @@
         <section class="reminders mt-5 pt-3">
             <h2 class="mb-4">Напоминания</h2>
             <div id="remindersList"></div>
+            <button class="btn btn-primary" onclick="addReminderForm()">Добавить напоминание</button>
         </section>
         <section class="statistics mt-5 pt-3">
             <h2 class="mb-4">Статистика</h2>
@@ -179,7 +180,7 @@
     function displayReminders(reminders) {
         const remindersList = document.getElementById('remindersList');
         remindersList.innerHTML = '';
-        reminders.forEach(reminder => {
+        reminders.forEach((reminder, index) => {
             const reminderCard = document.createElement('div');
             reminderCard.classList.add('card', 'mb-3');
             const times = reminder.times.join(', ');
@@ -189,9 +190,95 @@
                     <p class="card-text">Приемы: ${reminder.timesPerDay} раз в день</p>
                     <p class="card-text">Время: ${times}</p>
                     <p class="card-text">${reminder.beforeAfterMeal === 'before' ? 'До еды' : 'После еды'}</p>
+                    <button class="btn btn-danger" onclick="deleteReminder(${index})">Удалить</button>
                 </div>`;
             remindersList.appendChild(reminderCard);
         });
+    }
+
+    function addReminderForm() {
+        const remindersList = document.getElementById('remindersList');
+        const reminderForm = document.createElement('div');
+        reminderForm.classList.add('card', 'mb-3');
+        reminderForm.innerHTML = `
+            <div class="card-body">
+                <h5 class="card-title">Новое напоминание</h5>
+                <form id="newReminderForm">
+                    <div class="form-group">
+                        <label for="medicationName">Название лекарства</label>
+                        <input type="text" class="form-control" id="medicationName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="timesPerDay">Количество приемов в день</label>
+                        <input type="number" class="form-control" id="timesPerDay" min="1" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="times">Время приема (через запятую)</label>
+                        <input type="text" class="form-control" id="times" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="beforeAfterMeal">До или после еды</label>
+                        <select class="form-control" id="beforeAfterMeal" required>
+                            <option value="before">До еды</option>
+                            <option value="after">После еды</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Сохранить</button>
+                </form>
+            </div>`;
+        remindersList.appendChild(reminderForm);
+
+        document.getElementById('newReminderForm').addEventListener('submit', function (event) {
+            event.preventDefault();
+            const medicationName = document.getElementById('medicationName').value;
+            const timesPerDay = document.getElementById('timesPerDay').value;
+            const times = document.getElementById('times').value.split(',').map(time => time.trim());
+            const beforeAfterMeal = document.getElementById('beforeAfterMeal').value;
+
+            const newReminder = { medicationName, timesPerDay, times, beforeAfterMeal };
+
+            saveNewReminder(newReminder);
+        });
+    }
+
+    function saveNewReminder(reminder) {
+        const user = firebase.auth().currentUser;
+        if (user) {
+            db.collection('users').doc(user.uid).update({
+                reminders: firebase.firestore.FieldValue.arrayUnion(reminder)
+            }).then(() => {
+                alert('Напоминание успешно добавлено!');
+                loadUserData(user);
+            }).catch(error => {
+                console.error('Ошибка при добавлении напоминания: ', error);
+                alert('Ошибка при добавлении напоминания: ' + error.message);
+            });
+        }
+    }
+
+    function deleteReminder(index) {
+        const user = firebase.auth().currentUser;
+        if (user) {
+            db.collection('users').doc(user.uid).get().then((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    const reminders = data.reminders || [];
+                    const reminderToDelete = reminders[index];
+
+                    db.collection('users').doc(user.uid).update({
+                        reminders: firebase.firestore.FieldValue.arrayRemove(reminderToDelete)
+                    }).then(() => {
+                        alert('Напоминание успешно удалено!');
+                        loadUserData(user);
+                    }).catch(error => {
+                        console.error('Ошибка при удалении напоминания: ', error);
+                        alert('Ошибка при удалении напоминания: ' + error.message);
+                    });
+                }
+            }).catch(error => {
+                console.error('Ошибка при получении данных пользователя: ', error);
+            });
+        }
     }
 
     function displayMedicalData(medicalData) {
@@ -213,18 +300,18 @@
         medicalDataList.style.display = 'none';
 
         medicalDataList.innerHTML = `
-            <li class="list-group-item" data-analysis="totalCholesterol">Общий холестерин: ${latestData.totalCholesterol ? latestData.totalCholesterol.value + ' ммоль/л (Дата: ' + latestData.totalCholesterol.date + ')' : 'Не указано'}</li>
-            <li class="list-group-item" data-analysis="ldl">ЛПНП: ${latestData.ldl ? latestData.ldl.value + ' ммоль/л (Дата: ' + latestData.ldl.date + ')' : 'Не указано'}</li>
-            <li class="list-group-item" data-analysis="hdl">ЛПВП: ${latestData.hdl ? latestData.hdl.value + ' ммоль/л (Дата: ' + latestData.hdl.date + ')' : 'Не указано'}</li>
-            <li class="list-group-item" data-analysis="triglycerides">Триглицериды: ${latestData.triglycerides ? latestData.triglycerides.value + ' ммоль/л (Дата: ' + latestData.triglycerides.date + ')' : 'Не указано'}</li>
-            <li class="list-group-item" data-analysis="apoB">Аполипопротеин B: ${latestData.apoB ? latestData.apоB.value + ' г/л (Дата: ' + latestData.apоB.date + ')' : 'Не указано'}</li>
-            <li class="list-group-item" data-analysis="apoA1">Аполипопротеин A-I: ${latestData.apоA1 ? latestData.apоA1.value + ' г/л (Дата: ' + latestData.apоA1.date + ')' : 'Не указано'}</li>
-            <li class="list-group-item" data-analysis="lpA">Липопротеин(a) [Lp(a)]: ${latestData.lpA ? latestData.lpA.value + ' мг/дл (Дата: ' + latestData.lpA.date + ')' : 'Не указано'}</li>
-            <li class="list-group-item" data-analysis="hsCRP">Высокочувствительный С-реактивный белок: ${latestData.hsCRP ? latestData.hsCRP.value + ' мг/л (Дата: ' + latestData.hsCRP.date + ')' : 'Не указано'}</li>
-            <li class="list-group-item" data-analysis="glucose">Глюкоза: ${latestData.glucose ? latestData.glucose.value + ' ммоль/л (Дата: ' + latestData.glucose.date + ')' : 'Не указано'}</li>
-            <li class="list-group-item" data-analysis="hbA1c">Гликированный гемоглобин (HbA1c): ${latestData.hbA1c ? latestData.hbA1c.value + '% (Дата: ' + latestData.hbA1c.date + ')' : 'Не указано'}</li>
-            <li class="list-group-item" data-analysis="waistCircumference">Окружность талии: ${latestData.waistCircumference ? latestData.waistCircumference.value + ' см (Дата: ' + latestData.waistCircumference.date + ')' : 'Не указано'}</li>
-            <li class="list-group-item" data-analysis="bloodPressure">Артериальное давление: ${latestData.bloodPressure ? latestData.bloodPressure.value + ' мм рт. ст. (Дата: ' + latestData.bloodPressure.date + ')' : 'Не указано'}</li>`;
+        <li class="list-group-item" data-analysis="totalCholesterol">Общий холестерин: ${latestData.totalCholesterol && latestData.totalCholesterol.value ? latestData.totalCholesterol.value + ' ммоль/л (Дата: ' + latestData.totalCholesterol.date + ')' : 'Не указано'}</li>
+        <li class="list-group-item" data-analysis="ldl">ЛПНП: ${latestData.ldl && latestData.ldl.value ? latestData.ldl.value + ' ммоль/л (Дата: ' + latestData.ldl.date + ')' : 'Не указано'}</li>
+        <li class="list-group-item" data-analysis="hdl">ЛПВП: ${latestData.hdl && latestData.hdl.value ? latestData.hdl.value + ' ммоль/л (Дата: ' + latestData.hdl.date + ')' : 'Не указано'}</li>
+        <li class="list-group-item" data-analysis="triglycerides">Триглицериды: ${latestData.triglycerides && latestData.triglycerides.value ? latestData.triglycerides.value + ' ммоль/л (Дата: ' + latestData.triglycerides.date + ')' : 'Не указано'}</li>
+        <li class="list-group-item" data-analysis="apoB">Аполипопротеин B: ${latestData.apoB && latestData.apoB.value ? latestData.apоB.value + ' г/л (Дата: ' + latestData.apоB.date + ')' : 'Не указано'}</li>
+        <li class="list-group-item" data-analysis="apoA1">Аполипопротеин A-I: ${latestData.apоA1 && latestData.apоA1.value ? latestData.apоA1.value + ' г/л (Дата: ' + latestData.apоA1.date + ')' : 'Не указано'}</li>
+        <li class="list-group-item" data-analysis="lpA">Липопротеин(a) [Lp(a)]: ${latestData.lpA && latestData.lpA.value ? latestData.lpA.value + ' мг/дл (Дата: ' + latestData.lpA.date + ')' : 'Не указано'}</li>
+        <li class="list-group-item" data-analysis="hsCRP">Высокочувствительный С-реактивный белок: ${latestData.hsCRP && latestData.hsCRP.value ? latestData.hsCRP.value + ' мг/л (Дата: ' + latestData.hsCRP.date + ')' : 'Не указано'}</li>
+        <li class="list-group-item" data-analysis="glucose">Глюкоза: ${latestData.glucose && latestData.glucose.value ? latestData.glucose.value + ' ммоль/л (Дата: ' + latestData.glucose.date + ')' : 'Не указано'}</li>
+        <li class="list-group-item" data-analysis="hbA1c">Гликированный гемоглобин (HbA1c): ${latestData.hbA1c && latestData.hbA1c.value ? latestData.hbA1c.value + '% (Дата: ' + latestData.hbA1c.date + ')' : 'Не указано'}</li>
+        <li class="list-group-item" data-analysis="waistCircumference">Окружность талии: ${latestData.waistCircumference && latestData.waistCircumference.value ? latestData.waistCircumference.value + ' см (Дата: ' + latestData.waistCircumference.date + ')' : 'Не указано'}</li>
+        <li class="list-group-item" data-analysis="bloodPressure">Артериальное давление: ${latestData.bloodPressure && latestData.bloodPressure.value ? latestData.bloodPressure.value + ' мм рт. ст. (Дата: ' + latestData.bloodPressure.date + ')' : 'Не указано'}</li>`;
     }
 
     document.getElementById('analysisSelect').addEventListener('change', function() {
