@@ -15,24 +15,30 @@
                 <img src="assets/logo.png" alt="Logo" class="logo mb-4">
                 <h2 class="mb-4">Заполните данные о себе</h2>
             </div>
-            <form action="dashboard.html" method="post">
+            <form id="profileForm">
                 <div class="form-group">
-                    <input type="text" class="form-control" name="first_name" placeholder="Имя" required>
+                    <input type="text" class="form-control" name="first_name" id="first_name" placeholder="Имя" required>
                 </div>
                 <div class="form-group">
-                    <input type="text" class="form-control" name="last_name" placeholder="Фамилия" required>
+                    <input type="text" class="form-control" name="last_name" id="last_name" placeholder="Фамилия" required>
                 </div>
                 <div class="form-group">
-                    <input type="text" class="form-control" name="middle_name" placeholder="Отчество" required>
+                    <input type="text" class="form-control" name="middle_name" id="middle_name" placeholder="Отчество" required>
                 </div>
                 <div class="form-group">
-                    <input type="date" class="form-control" name="birth_date" placeholder="Дата рождения" required>
+                    <input type="date" class="form-control" name="birth_date" id="birth_date" placeholder="Дата рождения" required>
                 </div>
                 <div class="form-group">
-                    <input type="text" class="form-control" name="phone" placeholder="Номер телефона" required>
+                    <input type="text" class="form-control" name="phone" id="phone" placeholder="Номер телефона" required>
                 </div>
                 <div class="form-group">
-                    <select class="form-control" name="gender" required>
+                    <input type="number" class="form-control" name="height" id="height" placeholder="Рост (см)" required>
+                </div>
+                <div class="form-group">
+                    <input type="number" class="form-control" name="weight" id="weight" placeholder="Вес (кг)" required>
+                </div>
+                <div class="form-group">
+                    <select class="form-control" name="gender" id="gender" required>
                         <option value="" disabled selected>Пол</option>
                         <option value="male">Мужской</option>
                         <option value="female">Женский</option>
@@ -44,6 +50,61 @@
         </div>
     </div>
 </div>
+
+<!-- Firebase App (the core Firebase SDK) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<!-- Firebase Authentication -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<!-- Firebase Firestore -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+<script>
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyCjMYRohpvPHWhj9fthy3kaPX4N2Z1624Y",
+        authDomain: "sberhealth21.firebaseapp.com",
+        projectId: "sberhealth21",
+        storageBucket: "sberhealth21.appspot.com",
+        messagingSenderId: "322215357530",
+        appId: "1:322215357530:web:ba065b1db10cf85ec6bc63",
+        measurementId: "G-6XKSJYCWRZ"
+    };
+
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    document.getElementById('profileForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const user = firebase.auth().currentUser;
+
+        if (user) {
+            const userData = {
+                first_name: document.getElementById('first_name').value,
+                last_name: document.getElementById('last_name').value,
+                middle_name: document.getElementById('middle_name').value,
+                birth_date: document.getElementById('birth_date').value,
+                phone: document.getElementById('phone').value,
+                height: document.getElementById('height').value,
+                weight: document.getElementById('weight').value,
+                gender: document.getElementById('gender').value
+            };
+
+            db.collection('users').doc(user.uid).update(userData)
+                .then(() => {
+                    alert("Данные профиля успешно сохранены!");
+                    window.location.href = "add-reminders.html";
+                })
+                .catch((error) => {
+                    alert("Ошибка сохранения данных профиля: " + error.message);
+                });
+        } else {
+            alert("Пользователь не найден. Пожалуйста, войдите снова.");
+        }
+    });
+</script>
+
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>

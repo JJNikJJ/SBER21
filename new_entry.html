@@ -26,19 +26,59 @@
     <div class="content mt-5 pt-5">
         <section class="new-entry mt-5 pt-3">
             <h2 class="mb-4">Создание новой записи</h2>
-            <form>
+            <form id="entryForm">
                 <div class="form-group">
-                    <label for="entryTitle">Название записи</label>
-                    <input type="text" class="form-control" id="entryTitle" placeholder="Введите название записи">
+                    <label for="entryType">Выберите тип записи</label>
+                    <select class="form-control" id="entryType">
+                        <option value="">Выберите тип записи...</option>
+                        <option value="analysis">Анализы</option>
+                        <option value="wellbeing">Общее самочувствие</option>
+                    </select>
                 </div>
-                <div class="form-group">
-                    <label for="entryDate">Дата</label>
-                    <input type="date" class="form-control" id="entryDate">
+
+                <div id="analysisFields" style="display: none;">
+                    <div class="form-group">
+                        <label for="analysisType">Тип анализа</label>
+                        <select class="form-control" id="analysisType">
+                            <option value="totalCholesterol">Общий холестерин</option>
+                            <option value="ldl">ЛПНП</option>
+                            <option value="hdl">ЛПВП</option>
+                            <option value="triglycerides">Триглицериды</option>
+                            <option value="apoB">Аполипопротеин B</option>
+                            <option value="apoA1">Аполипопротеин A-I</option>
+                            <option value="lpA">Липопротеин(a)</option>
+                            <option value="hsCRP">Высокочувствительный С-реактивный белок</option>
+                            <option value="glucose">Глюкоза</option>
+                            <option value="hbA1c">Гликированный гемоглобин (HbA1c)</option>
+                            <option value="waistCircumference">Окружность талии</option>
+                            <option value="bloodPressure">Артериальное давление</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="analysisDate">Дата анализа</label>
+                        <input type="date" class="form-control" id="analysisDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="analysisValue">Значение анализа</label>
+                        <input type="number" step="0.1" class="form-control" id="analysisValue" placeholder="Введите значение анализа">
+                    </div>
                 </div>
-                <div class="form-group">
-                    <label for="entryDescription">Описание</label>
-                    <textarea class="form-control" id="entryDescription" rows="5" placeholder="Введите описание"></textarea>
+
+                <div id="wellbeingFields" style="display: none;">
+                    <div class="form-group">
+                        <label for="wellbeingDate">Дата</label>
+                        <input type="date" class="form-control" id="wellbeingDate">
+                    </div>
+                    <div class="form-group">
+                        <label for="wellbeingStatus">Общее состояние здоровья</label>
+                        <input type="text" class="form-control" id="wellbeingStatus" placeholder="Введите общее состояние здоровья">
+                    </div>
+                    <div class="form-group">
+                        <label for="wellbeingDescription">Описание</label>
+                        <textarea class="form-control" id="wellbeingDescription" rows="5" placeholder="Введите описание"></textarea>
+                    </div>
                 </div>
+
                 <button type="submit" class="btn btn-primary btn-block">Сохранить запись</button>
             </form>
         </section>
@@ -57,12 +97,98 @@
     </ul>
 </nav>
 
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
 <script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCjMYRohpvPHWhj9fthy3kaPX4N2Z1624Y",
+        authDomain: "sberhealth21.firebaseapp.com",
+        projectId: "sberhealth21",
+        storageBucket: "sberhealth21.appspot.com",
+        messagingSenderId: "322215357530",
+        appId: "1:322215357530:web:ba065b1db10cf85ec6bc63",
+        measurementId: "G-6XKSJYCWRZ"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
     function toggleMenu() {
         var menu = document.getElementById('burger-menu');
         menu.classList.toggle('open');
     }
+
+    document.getElementById('entryType').addEventListener('change', function() {
+        const analysisFields = document.getElementById('analysisFields');
+        const wellbeingFields = document.getElementById('wellbeingFields');
+        if (this.value === 'analysis') {
+            analysisFields.style.display = 'block';
+            wellbeingFields.style.display = 'none';
+        } else if (this.value === 'wellbeing') {
+            analysisFields.style.display = 'none';
+            wellbeingFields.style.display = 'block';
+        } else {
+            analysisFields.style.display = 'none';
+            wellbeingFields.style.display = 'none';
+        }
+    });
+
+    document.getElementById('entryForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const user = firebase.auth().currentUser;
+        if (user) {
+            const entryType = document.getElementById('entryType').value;
+            if (entryType === 'analysis') {
+                const analysisType = document.getElementById('analysisType').value;
+                const analysisDate = document.getElementById('analysisDate').value;
+                const analysisValue = parseFloat(document.getElementById('analysisValue').value);
+
+                const analysisData = {
+                    type: analysisType,
+                    date: analysisDate,
+                    value: analysisValue
+                };
+
+                db.collection('users').doc(user.uid).update({
+                    [`medicalData.${analysisType}`]: firebase.firestore.FieldValue.arrayUnion(analysisData)
+                }).then(() => {
+                    alert("Анализ успешно сохранен!");
+                    window.location.href = "dashboard.html";
+                }).catch(error => {
+                    console.error("Error saving analysis data: ", error);
+                    alert("Ошибка при сохранении данных анализа: " + error.message);
+                });
+            } else if (entryType === 'wellbeing') {
+                const wellbeingDate = document.getElementById('wellbeingDate').value;
+                const wellbeingStatus = document.getElementById('wellbeingStatus').value;
+                const wellbeingDescription = document.getElementById('wellbeingDescription').value;
+
+                const wellbeingData = {
+                    date: wellbeingDate,
+                    status: wellbeingStatus,
+                    description: wellbeingDescription
+                };
+
+                db.collection('users').doc(user.uid).update({
+                    wellbeing: firebase.firestore.FieldValue.arrayUnion(wellbeingData)
+                }).then(() => {
+                    alert("Данные о самочувствии успешно сохранены!");
+                    window.location.href = "diary.html";
+                }).catch(error => {
+                    console.error("Error saving wellbeing data: ", error);
+                    alert("Ошибка при сохранении данных о самочувствии: " + error.message);
+                });
+            }
+        } else {
+            console.log("User not authenticated");
+            window.location.href = "login.html";
+        }
+    });
 </script>
+
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
 <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>

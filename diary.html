@@ -27,28 +27,8 @@
         <button class="btn btn-primary btn-block mt-3" onclick="location.href='new_entry.html'">Сделать новую запись</button>
         <section class="previous-entries mt-5 pt-3">
             <h2 class="mb-4">Предыдущие записи</h2>
-            <div class="list-group">
-                <a href="#" class="list-group-item list-group-item-action">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">Общие самочувствие</h5>
-                        <small>12.05.2024</small>
-                    </div>
-                    <p class="mb-1">Описание вашего общего самочувствия за этот день.</p>
-                </a>
-                <a href="#" class="list-group-item list-group-item-action">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">Анализы крови</h5>
-                        <small>10.05.2024</small>
-                    </div>
-                    <p class="mb-1">Результаты последних анализов крови.</p>
-                </a>
-                <a href="#" class="list-group-item list-group-item-action">
-                    <div class="d-flex w-100 justify-content-between">
-                        <h5 class="mb-1">Физическая активность</h5>
-                        <small>08.05.2024</small>
-                    </div>
-                    <p class="mb-1">Отчет о вашей физической активности.</p>
-                </a>
+            <div class="list-group" id="entriesList">
+                <!-- Записи будут динамически добавляться сюда -->
             </div>
         </section>
     </div>
@@ -66,10 +46,69 @@
     </ul>
 </nav>
 
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
 <script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCjMYRohpvPHWhj9fthy3kaPX4N2Z1624Y",
+        authDomain: "sberhealth21.firebaseapp.com",
+        projectId: "sberhealth21",
+        storageBucket: "sberhealth21.appspot.com",
+        messagingSenderId: "322215357530",
+        appId: "1:322215357530:web:ba065b1db10cf85ec6bc63",
+        measurementId: "G-6XKSJYCWRZ"
+    };
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
     function toggleMenu() {
         var menu = document.getElementById('burger-menu');
         menu.classList.toggle('open');
+    }
+
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            loadEntries(user);
+        } else {
+            console.log("User not authenticated");
+            window.location.href = "login.html";
+        }
+    });
+
+    function loadEntries(user) {
+        db.collection('users').doc(user.uid).get().then((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                const entriesList = document.getElementById('entriesList');
+
+                // Clear the list
+                entriesList.innerHTML = '';
+
+                // Display wellbeing entries
+                if (data.wellbeing && data.wellbeing.length > 0) {
+                    data.wellbeing.forEach(entry => {
+                        const entryElement = document.createElement('a');
+                        entryElement.classList.add('list-group-item', 'list-group-item-action');
+                        entryElement.innerHTML = `
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">Общее самочувствие</h5>
+                                <small>${entry.date}</small>
+                            </div>
+                            <p class="mb-1">${entry.status}</p>
+                            <p class="mb-1">${entry.description}</p>
+                        `;
+                        entriesList.appendChild(entryElement);
+                    });
+                }
+            } else {
+                console.log("No such document!");
+            }
+        }).catch((error) => {
+            console.log("Error getting document:", error);
+        });
     }
 </script>
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>

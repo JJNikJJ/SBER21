@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balance BioHealth - Добавить Напоминание</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles/styles.css">
+</head>
+<body class="reminders-page">
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="text-center">
+                <img src="assets/logo.png" alt="Logo" class="logo mb-4">
+                <h2 class="mb-4">Добавить Напоминание о Приеме Лекарств</h2>
+            </div>
+            <form id="remindersForm">
+                <div id="reminderEntries">
+                    <div class="reminder-entry">
+                        <div class="form-group">
+                            <label for="medicationName">Наименование лекарства</label>
+                            <input type="text" class="form-control" name="medicationName" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="timesPerDay">Количество приемов в день</label>
+                            <input type="number" class="form-control times-per-day" name="timesPerDay" min="1" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Время приема</label>
+                            <div class="time-inputs">
+                                <input type="time" class="form-control time-input" name="time1" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="beforeAfterMeal">До или после еды</label>
+                            <select class="form-control" name="beforeAfterMeal" required>
+                                <option value="before">До еды</option>
+                                <option value="after">После еды</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary mb-3" id="addReminderEntry">+ Добавить лекарство</button>
+                <button type="submit" class="btn btn-primary btn-block">Сохранить напоминания</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Firebase App (the core Firebase SDK) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<!-- Firebase Authentication -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<!-- Firebase Firestore -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+<script>
+    // Your web app's Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyCjMYRohpvPHWhj9fthy3kaPX4N2Z1624Y",
+        authDomain: "sberhealth21.firebaseapp.com",
+        projectId: "sberhealth21",
+        storageBucket: "sberhealth21.appspot.com",
+        messagingSenderId: "322215357530",
+        appId: "1:322215357530:web:ba065b1db10cf85ec6bc63",
+        measurementId: "G-6XKSJYCWRZ"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    document.getElementById('addReminderEntry').addEventListener('click', function() {
+        const reminderEntries = document.getElementById('reminderEntries');
+        const newEntry = document.createElement('div');
+        newEntry.classList.add('reminder-entry');
+        newEntry.innerHTML = `
+            <div class="form-group">
+                <label for="medicationName">Наименование лекарства</label>
+                <input type="text" class="form-control" name="medicationName" required>
+            </div>
+            <div class="form-group">
+                <label for="timesPerDay">Количество приемов в день</label>
+                <input type="number" class="form-control times-per-day" name="timesPerDay" min="1" required>
+            </div>
+            <div class="form-group">
+                <label>Время приема</label>
+                <div class="time-inputs">
+                    <input type="time" class="form-control time-input" name="time1" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="beforeAfterMeal">До или после еды</label>
+                <select class="form-control" name="beforeAfterMeal" required>
+                    <option value="before">До еды</option>
+                    <option value="after">После еды</option>
+                </select>
+            </div>`;
+        reminderEntries.appendChild(newEntry);
+    });
+
+    document.addEventListener('input', function(event) {
+        if (event.target && event.target.matches('.times-per-day')) {
+            const timesPerDay = parseInt(event.target.value);
+            const timeInputs = event.target.closest('.reminder-entry').querySelector('.time-inputs');
+            timeInputs.innerHTML = '';
+            for (let i = 1; i <= timesPerDay; i++) {
+                const input = document.createElement('input');
+                input.type = 'time';
+                input.classList.add('form-control', 'time-input');
+                input.name = `time${i}`;
+                input.required = true;
+                timeInputs.appendChild(input);
+            }
+        }
+    });
+
+    document.getElementById('remindersForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const user = firebase.auth().currentUser;
+        if (user) {
+            const reminderEntries = document.querySelectorAll('.reminder-entry');
+            const reminders = Array.from(reminderEntries).map(entry => {
+                const medicationName = entry.querySelector('[name="medicationName"]').value;
+                const timesPerDay = entry.querySelector('[name="timesPerDay"]').value;
+                const timeInputs = entry.querySelectorAll('.time-input');
+                const times = Array.from(timeInputs).map(input => input.value);
+                const beforeAfterMeal = entry.querySelector('[name="beforeAfterMeal"]').value;
+                return { medicationName, timesPerDay, times, beforeAfterMeal };
+            });
+
+            db.collection('users').doc(user.uid).update({ reminders })
+                .then(() => {
+                    alert("Напоминания успешно сохранены!");
+                    window.location.href = "add-medical-data.html";
+                })
+                .catch(error => {
+                    console.error("Error saving reminders: ", error);
+                    alert("Ошибка при сохранении напоминаний: " + error.message);
+                });
+        } else {
+            console.log("User not authenticated");
+            window.location.href = "login.html";
+        }
+    });
+</script>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

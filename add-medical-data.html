@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Balance BioHealth - Медицинские данные</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="styles/styles.css">
+    <style>
+        .analysis-container { border: 1px solid #ccc; padding: 15px; margin-bottom: 15px; }
+        .analysis-entry { border: 1px solid #ddd; padding: 10px; margin-bottom: 10px; }
+        .remove-entry { color: red; cursor: pointer; }
+        .remove-analysis { color: red; cursor: pointer; display: block; text-align: right; }
+    </style>
+</head>
+<body class="medical-data-page">
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="text-center">
+                <img src="assets/logo.png" alt="Logo" class="logo mb-4">
+                <h2 class="mb-4">Введите ваши медицинские данные</h2>
+            </div>
+            <form id="medicalDataForm">
+                <div class="form-group">
+                    <label for="analysisSelect">Выберите анализ</label>
+                    <select class="form-control" id="analysisSelect">
+                        <option value="totalCholesterol">Общий холестерин</option>
+                        <option value="ldl">ЛПНП</option>
+                        <option value="hdl">ЛПВП</option>
+                        <option value="triglycerides">Триглицериды</option>
+                        <option value="apoB">Аполипопротеин B</option>
+                        <option value="apoA1">Аполипопротеин A-I</option>
+                        <option value="lpA">Липопротеин(a)</option>
+                        <option value="hsCRP">Высокочувствительный С-реактивный белок</option>
+                        <option value="glucose">Глюкоза</option>
+                        <option value="hbA1c">Гликированный гемоглобин (HbA1c)</option>
+                        <option value="waistCircumference">Окружность талии</option>
+                        <option value="bloodPressure">Артериальное давление</option>
+                    </select>
+                </div>
+                <button type="button" class="btn btn-primary mb-3" id="addAnalysis">Добавить анализ</button>
+                <div id="analysisEntries"></div>
+                <button type="submit" class="btn btn-primary btn-block">Сохранить данные</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Firebase App (the core Firebase SDK) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<!-- Firebase Authentication -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<!-- Firebase Firestore -->
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
+<script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCjMYRohpvPHWhj9fthy3kaPX4N2Z1624Y",
+        authDomain: "sberhealth21.firebaseapp.com",
+        projectId: "sberhealth21",
+        storageBucket: "sberhealth21.appspot.com",
+        messagingSenderId: "322215357530",
+        appId: "1:322215357530:web:ba065b1db10cf85ec6bc63",
+        measurementId: "G-6XKSJYCWRZ"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    document.getElementById('addAnalysis').addEventListener('click', function() {
+        const analysisType = document.getElementById('analysisSelect').value;
+        const analysisTypeText = document.getElementById('analysisSelect').options[document.getElementById('analysisSelect').selectedIndex].text;
+        addAnalysisContainer(analysisType, analysisTypeText);
+    });
+
+    document.getElementById('medicalDataForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+        const user = firebase.auth().currentUser;
+        if (user) {
+            const medicalData = {};
+            const analysisContainers = document.querySelectorAll('.analysis-container');
+            analysisContainers.forEach(container => {
+                const type = container.getAttribute('data-type');
+                const entries = container.querySelectorAll('.analysis-entry');
+                entries.forEach(entry => {
+                    const date = entry.querySelector('.analysis-date').value;
+                    const value = parseFloat(entry.querySelector('.analysis-value').value);
+                    if (!medicalData[type]) medicalData[type] = [];
+                    medicalData[type].push({ date, value });
+                });
+            });
+
+            db.collection('users').doc(user.uid).update({ medicalData })
+                .then(() => {
+                    alert("Медицинские данные успешно сохранены!");
+                    window.location.href = "dashboard.html";
+                })
+                .catch(error => {
+                    console.error("Error saving medical data: ", error);
+                    alert("Ошибка при сохранении медицинских данных: " + error.message);
+                });
+        } else {
+            console.log("User not authenticated");
+            window.location.href = "login.html";
+        }
+    });
+
+    function addAnalysisContainer(type, typeText) {
+        const analysisContainer = document.getElementById('analysisEntries');
+        const container = document.createElement('div');
+        container.className = 'analysis-container';
+        container.setAttribute('data-type', type);
+        container.innerHTML = `
+            <h5>${typeText}</h5>
+            <button type="button" class="btn btn-secondary mb-3" onclick="addAnalysisEntry(this)">Добавить значение</button>
+            <span class="remove-analysis" onclick="removeAnalysisContainer(this)">Удалить анализ</span>
+        `;
+        analysisContainer.appendChild(container);
+    }
+
+    function addAnalysisEntry(button) {
+        const container = button.closest('.analysis-container');
+        const entry = document.createElement('div');
+        entry.className = 'analysis-entry';
+        entry.innerHTML = `
+            <div class="form-group">
+                <label>Дата анализа</label>
+                <input type="date" class="form-control analysis-date" required>
+            </div>
+            <div class="form-group">
+                <label>Значение</label>
+                <input type="number" step="0.1" class="form-control analysis-value" required>
+            </div>
+            <span class="remove-entry" onclick="removeAnalysisEntry(this)">Удалить</span>
+        `;
+        container.appendChild(entry);
+    }
+
+    function removeAnalysisContainer(element) {
+        const container = element.closest('.analysis-container');
+        container.remove();
+    }
+
+    function removeAnalysisEntry(element) {
+        const entry = element.closest('.analysis-entry');
+        entry.remove();
+    }
+</script>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</body>
+</html>

@@ -44,30 +44,13 @@
     <div class="content mt-2 pt-2">
         <section class="reminders mt-5 pt-3">
             <h2 class="mb-4">Напоминания</h2>
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Напоминание о приеме лекарств</h5>
-                    <p class="card-text">Лекарство А - 8:00, Лекарство Б - 14:00</p>
-                </div>
-            </div>
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">План диеты и напоминания о питании</h5>
-                    <p class="card-text">Завтрак - 7:00, Обед - 13:00, Ужин - 19:00</p>
-                </div>
-            </div>
-            <div class="card mb-3">
-                <div class="card-body">
-                    <h5 class="card-title">Напоминания о необходимости выполнения физических упражнений</h5>
-                    <p class="card-text">Утром - бег, Вечером - йога</p>
-                </div>
-            </div>
+            <div id="remindersList"></div>
         </section>
         <section class="statistics mt-5 pt-3">
             <h2 class="mb-4">Статистика</h2>
             <ul class="list-group mb-4">
-                <li class="list-group-item">Вес: 80 кг</li>
-                <li class="list-group-item">Рост: 182 см</li>
+                <li class="list-group-item">Вес: <span id="weight">-</span> кг</li>
+                <li class="list-group-item">Рост: <span id="height">-</span> см</li>
                 <li class="list-group-item">Индекс массы тела (ИМТ): <span id="bmi-value" class=""></span></li>
                 <li class="list-group-item">Статус физической активности:
                     <div class="progress">
@@ -79,9 +62,28 @@
                 <li class="list-group-item">Калории: 2,000 ккал/день</li>
                 <li class="list-group-item">Гидратация: 2 литра/день</li>
             </ul>
+            <h3 class="mb-4">Медицинские данные</h3>
+            <div class="form-group">
+                <label for="analysisSelect">Выберите анализ</label>
+                <select class="form-control" id="analysisSelect">
+                    <option value="">Выберите анализ...</option>
+                    <option value="totalCholesterol">Общий холестерин</option>
+                    <option value="ldl">ЛПНП</option>
+                    <option value="hdl">ЛПВП</option>
+                    <option value="triglycerides">Триглицериды</option>
+                    <option value="apoB">Аполипопротеин B</option>
+                    <option value="apoA1">Аполипопротеин A-I</option>
+                    <option value="lpA">Липопротеин(a)</option>
+                    <option value="hsCRP">Высокочувствительный С-реактивный белок</option>
+                    <option value="glucose">Глюкоза</option>
+                    <option value="hbA1c">Гликированный гемоглобин (HbA1c)</option>
+                    <option value="waistCircumference">Окружность талии</option>
+                    <option value="bloodPressure">Артериальное давление</option>
+                </select>
+            </div>
+            <ul class="list-group mb-4" id="medicalDataList" style="display:none;"></ul>
+            <canvas id="analysisChart" class="mb-4" style="display:none;"></canvas>
             <p>Данные за последние 7 дней:</p>
-            <h3 class="mb-4">Уровень холестерина</h3>
-            <canvas id="cholesterolChart" class="mb-4"></canvas>
             <h3 class="mb-4">Артериальное давление</h3>
             <canvas id="bloodPressureChart" class="mb-4"></canvas>
             <h3 class="mb-4">Физическая активность</h3>
@@ -104,27 +106,173 @@
     </ul>
 </nav>
 
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-firestore.js"></script>
+
 <script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyCjMYRohpvPHWhj9fthy3kaPX4N2Z1624Y",
+        authDomain: "sberhealth21.firebaseapp.com",
+        projectId: "sberhealth21",
+        storageBucket: "sberhealth21.appspot.com",
+        messagingSenderId: "322215357530",
+        appId: "1:322215357530:web:ba065b1db10cf85ec6bc63",
+        measurementId: "G-6XKSJYCWRZ"
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
     function toggleMenu() {
         var menu = document.getElementById('burger-menu');
         menu.classList.toggle('open');
     }
 
-    document.addEventListener("DOMContentLoaded", function() {
-        var ctx1 = document.getElementById('cholesterolChart').getContext('2d');
-        var ctx2 = document.getElementById('bloodPressureChart').getContext('2d');
-        var ctx3 = document.getElementById('activityChart').getContext('2d');
-        var ctx4 = document.getElementById('nutritionChart').getContext('2d');
+    firebase.auth().onAuthStateChanged((user) => {
+        if (user) {
+            loadUserData(user);
+        } else {
+            console.log("User not authenticated");
+            window.location.href = "login.html";
+        }
+    });
 
-        // График уровня холестерина
-        var cholesterolChart = new Chart(ctx1, {
-            type: 'bar',
+    function loadUserData(user) {
+        db.collection('users').doc(user.uid).get().then((doc) => {
+            if (doc.exists) {
+                const data = doc.data();
+                displayReminders(data.reminders || []);
+                displayMedicalData(data.medicalData || {});
+                document.getElementById('weight').textContent = data.weight || 'Не указано';
+                document.getElementById('height').textContent = data.height || 'Не указано';
+
+                const weight = data.weight;
+                const height = data.height;
+                if (weight && height) {
+                    const bmi = (weight / Math.pow(height / 100, 2)).toFixed(1);
+                    const bmiElement = document.getElementById('bmi-value');
+                    bmiElement.textContent = bmi;
+
+                    if (bmi < 18.5) {
+                        bmiElement.classList.add('bmi-low');
+                    } else if (bmi >= 18.5 && bmi <= 24.9) {
+                        bmiElement.classList.add('bmi-normal');
+                    } else if (bmi >= 25 && bmi <= 29.9) {
+                        bmiElement.classList.add('bmi-high');
+                    } else {
+                        bmiElement.classList.add('bmi-very-high');
+                    }
+                }
+
+                initializeCharts(data);
+                localStorage.setItem('userData', JSON.stringify(data)); // Save userData to localStorage
+            } else {
+                console.log("No such document!");
+            }
+        }).catch((error) => {
+            console.log("Error getting document:", error);
+        });
+    }
+
+    function displayReminders(reminders) {
+        const remindersList = document.getElementById('remindersList');
+        remindersList.innerHTML = '';
+        reminders.forEach(reminder => {
+            const reminderCard = document.createElement('div');
+            reminderCard.classList.add('card', 'mb-3');
+            const times = reminder.times.join(', ');
+            reminderCard.innerHTML = `
+                <div class="card-body">
+                    <h5 class="card-title">${reminder.medicationName}</h5>
+                    <p class="card-text">Приемы: ${reminder.timesPerDay} раз в день</p>
+                    <p class="card-text">Время: ${times}</p>
+                    <p class="card-text">${reminder.beforeAfterMeal === 'before' ? 'До еды' : 'После еды'}</p>
+                </div>`;
+            remindersList.appendChild(reminderCard);
+        });
+    }
+
+    function displayMedicalData(medicalData) {
+        const medicalDataList = document.getElementById('medicalDataList');
+        const latestData = {};
+
+        for (const [key, values] of Object.entries(medicalData)) {
+            if (values && values.length) {
+                const latestEntry = values.reduce((latest, current) => {
+                    return new Date(latest.date) > new Date(current.date) ? latest : current;
+                });
+                latestData[key] = latestEntry;
+            } else {
+                latestData[key] = { date: 'Не указано', value: 'Не указано' };
+            }
+        }
+
+        // Hide medicalDataList by default
+        medicalDataList.style.display = 'none';
+
+        medicalDataList.innerHTML = `
+            <li class="list-group-item" data-analysis="totalCholesterol">Общий холестерин: ${latestData.totalCholesterol ? latestData.totalCholesterol.value + ' ммоль/л (Дата: ' + latestData.totalCholesterol.date + ')' : 'Не указано'}</li>
+            <li class="list-group-item" data-analysis="ldl">ЛПНП: ${latestData.ldl ? latestData.ldl.value + ' ммоль/л (Дата: ' + latestData.ldl.date + ')' : 'Не указано'}</li>
+            <li class="list-group-item" data-analysis="hdl">ЛПВП: ${latestData.hdl ? latestData.hdl.value + ' ммоль/л (Дата: ' + latestData.hdl.date + ')' : 'Не указано'}</li>
+            <li class="list-group-item" data-analysis="triglycerides">Триглицериды: ${latestData.triglycerides ? latestData.triglycerides.value + ' ммоль/л (Дата: ' + latestData.triglycerides.date + ')' : 'Не указано'}</li>
+            <li class="list-group-item" data-analysis="apoB">Аполипопротеин B: ${latestData.apoB ? latestData.apоB.value + ' г/л (Дата: ' + latestData.apоB.date + ')' : 'Не указано'}</li>
+            <li class="list-group-item" data-analysis="apoA1">Аполипопротеин A-I: ${latestData.apоA1 ? latestData.apоA1.value + ' г/л (Дата: ' + latestData.apоA1.date + ')' : 'Не указано'}</li>
+            <li class="list-group-item" data-analysis="lpA">Липопротеин(a) [Lp(a)]: ${latestData.lpA ? latestData.lpA.value + ' мг/дл (Дата: ' + latestData.lpA.date + ')' : 'Не указано'}</li>
+            <li class="list-group-item" data-analysis="hsCRP">Высокочувствительный С-реактивный белок: ${latestData.hsCRP ? latestData.hsCRP.value + ' мг/л (Дата: ' + latestData.hsCRP.date + ')' : 'Не указано'}</li>
+            <li class="list-group-item" data-analysis="glucose">Глюкоза: ${latestData.glucose ? latestData.glucose.value + ' ммоль/л (Дата: ' + latestData.glucose.date + ')' : 'Не указано'}</li>
+            <li class="list-group-item" data-analysis="hbA1c">Гликированный гемоглобин (HbA1c): ${latestData.hbA1c ? latestData.hbA1c.value + '% (Дата: ' + latestData.hbA1c.date + ')' : 'Не указано'}</li>
+            <li class="list-group-item" data-analysis="waistCircumference">Окружность талии: ${latestData.waistCircumference ? latestData.waistCircumference.value + ' см (Дата: ' + latestData.waistCircumference.date + ')' : 'Не указано'}</li>
+            <li class="list-group-item" data-analysis="bloodPressure">Артериальное давление: ${latestData.bloodPressure ? latestData.bloodPressure.value + ' мм рт. ст. (Дата: ' + latestData.bloodPressure.date + ')' : 'Не указано'}</li>`;
+    }
+
+    document.getElementById('analysisSelect').addEventListener('change', function() {
+        const selectedAnalysis = this.value;
+        const medicalDataList = document.getElementById('medicalDataList');
+        const data = JSON.parse(localStorage.getItem('userData')); // Assumes userData is stored in localStorage
+
+        if (selectedAnalysis && data && data.medicalData && data.medicalData[selectedAnalysis]) {
+            const analysisData = data.medicalData[selectedAnalysis];
+            renderAnalysisChart(selectedAnalysis, analysisData);
+
+            const items = medicalDataList.querySelectorAll('li');
+            items.forEach(item => {
+                if (item.dataset.analysis === selectedAnalysis) {
+                    item.style.display = 'block';
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            medicalDataList.style.display = 'block';
+        } else {
+            document.getElementById('analysisChart').style.display = 'none';
+            medicalDataList.style.display = 'none';
+        }
+    });
+
+    let analysisChart;
+
+    function renderAnalysisChart(type, data) {
+        const chartLabels = data.map(entry => entry.date);
+        const chartData = data.map(entry => entry.value);
+        const ctx = document.getElementById('analysisChart').getContext('2d');
+        document.getElementById('analysisChart').style.display = 'block';
+
+        if (analysisChart) {
+            analysisChart.destroy();
+        }
+
+        analysisChart = new Chart(ctx, {
+            type: 'line',
             data: {
-                labels: ['ЛПНП', 'ЛПВП'],
+                labels: chartLabels,
                 datasets: [{
-                    label: 'Уровень холестерина (ммоль/л)',
-                    data: [3.5, 1.2],
-                    backgroundColor: ['#ff6384', '#36a2eb']
+                    label: `Уровень ${type}`,
+                    data: chartData,
+                    borderColor: '#36a2eb',
+                    fill: false
                 }]
             },
             options: {
@@ -135,6 +283,12 @@
                 }
             }
         });
+    }
+
+    function initializeCharts(data) {
+        var ctx2 = document.getElementById('bloodPressureChart').getContext('2d');
+        var ctx3 = document.getElementById('activityChart').getContext('2d');
+        var ctx4 = document.getElementById('nutritionChart').getContext('2d');
 
         // График артериального давления
         var bloodPressureChart = new Chart(ctx2, {
@@ -177,42 +331,24 @@
             }
         });
 
-        // График персонального плана питания
-        var nutritionChart = new Chart(ctx4, {
-            type: 'pie',
-            data: {
-                labels: ['Белки', 'Жиры', 'Углеводы'],
-                datasets: [{
-                    label: 'Соотношение нутриентов (%)',
-                    data: [25, 30, 45],
-                    backgroundColor: ['#ff6384', '#36a2eb', '#ffcd56']
-                }]
-            },
-            options: {
-                responsive: true
-            }
-        });
-
-        // Расчет индекса массы тела и установка цвета
-        var weight = 80; // Вес в кг
-        var height = 182; // Рост в см
-        var bmi = (weight / Math.pow(height / 100, 2)).toFixed(1);
-        var bmiElement = document.getElementById('bmi-value');
-        bmiElement.textContent = bmi;
-
-        if (bmi < 18.5) {
-            bmiElement.classList.add('bmi-low');
-        } else if (bmi >= 18.5 && bmi <= 24.9) {
-            bmiElement.classList.add('bmi-normal');
-        } else if (bmi >= 25 && bmi <= 29.9) {
-            bmiElement.classList.add('bmi-high');
+        // Проверка на существование данных для нутриентов
+        if (data.proteins !== undefined && data.fats !== undefined && data.carbs !== undefined) {
+            // График персонального плана питания
+            var nutritionChart = new Chart(ctx4, {
+                type: 'pie',
+                data: {
+                    labels: ['Белки', 'Жиры', 'Углеводы'],
+                    datasets: [{
+                        label: 'Соотношение нутриентов (%)',
+                        data: [data.proteins, data.fats, data.carbs],
+                        backgroundColor: ['#36a2eb', '#ff6384', '#ffcd56']
+                    }]
+                }
+            });
         } else {
-            bmiElement.classList.add('bmi-very-high');
+            console.error('Нутриентные данные отсутствуют в данных пользователя.');
         }
-    });
+    }
 </script>
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>
